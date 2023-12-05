@@ -38,16 +38,13 @@ module.exports.removeItembyId = (req, res) => {
     res.status(400).send({ message: errors[res.statusCode].message })
   } else {
     ClothingItem.findByIdAndRemove(req.params.id)
-      .orFail(() => {
-        const error = new Error("Item ID not found");
-        throw error;
-      })
+      .orFail()
       .then(item => res.send({ data: item }))
       .catch((err) => {
-        if (err.name === 'Error') {
+        if (err.name === 'DocumentNotFoundError') {
           res.status(404).send({ message: errors[res.statusCode].message })
         } else {
-          res.status.status(500).send({ message: errors[res.statusCode].message })
+          res.status(500).send({ message: errors[res.statusCode].message })
         }
       });
   }
@@ -65,16 +62,13 @@ module.exports.likeItem = (req, res) => {
       { $addToSet: { likes: req.user._id } },
       { new: true },
     )
-      .orFail(() => {
-        const error = new Error("Item ID not found");
-        throw error;
-      })
+      .orFail()
       .then(item => res.send({ data: item }))
       .catch((err) => {
-        if (err.name === 'Error') {
+        if (err.name === 'DocumentNotFoundError') {
           res.status(404).send({ message: errors[res.statusCode].message })
         } else {
-          res.status.status(500).send({ message: errors[res.statusCode].message })
+          res.status(500).send({ message: errors[res.statusCode].message })
         }
       });
   }
@@ -91,16 +85,13 @@ module.exports.unlikeItem = (req, res) => {
       { $pull: { likes: req.user._id } },
       { new: true },
     )
-      .orFail(() => {
-        const error = new Error("Item ID not found");
-        throw error;
-      })
+      .orFail()
       .then(item => res.send({ data: item }))
       .catch((err) => {
-        if (err.name === 'Error') {
+        if (err.name === 'DocumentNotFoundError') {
           res.status(404).send({ message: errors[res.statusCode].message })
         } else {
-          res.status.status(500).send({ message: errors[res.statusCode].message })
+          res.status(500).send({ message: errors[res.statusCode].message })
         }
       });
   }

@@ -1,13 +1,13 @@
 module.exports.errors = {
 
   400:{
-    message: "Bad request",
+    message: "The request you are trying to make was invalid",
   },
   404:{
-    message: "Resource unavailable",
+    message: "The resource you are looking for does not exist",
   },
   500:{
-    message: "Internal server error",
+    message: "An error has occurred on the server",
   },
 
 };

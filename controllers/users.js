@@ -7,7 +7,7 @@ const { errors } = require('../utils/errors');
 module.exports.getUsers = (req, res) => {
   User.find({})
     .then(users => res.send({ data: users }))
-    .catch(err => res.status(500).send({ message: errors[res.statusCode].message }));
+    .catch(() => res.status(500).send({ message: errors[res.statusCode].message }));
 };
 
 
@@ -15,19 +15,16 @@ module.exports.getUsers = (req, res) => {
 module.exports.getUser = (req, res) => {
 
   if (!validator.isMongoId(req.params.id)) {
-    res.status(400).send({ message: 'Please enter a valid Id' })
+    res.status(400).send({ message: errors[res.statusCode].message })
   } else {
     User.findById(req.params.id)
-      .orFail(() => {
-        const error = new Error("Item ID not found");
-        throw error;
-      })
+      .orFail()
       .then(user => res.send({ data: user }))
       .catch((err) => {
-        if (err.name === 'Error') {
+        if (err.name === 'DocumentNotFoundError') {
           res.status(404).send({ message: errors[res.statusCode].message })
         } else {
-          res.status.status(500).send({ message: errors[res.statusCode].message })
+          res.status(500).send({ message: errors[res.statusCode].message })
         }
       });
   }
@@ -46,7 +43,7 @@ module.exports.createUser = (req, res) => {
       if (err.name === 'ValidationError') {
         res.status(400).send({ message: errors[res.statusCode].message })
       } else {
-        res.status.status(500).send({ message: errors[res.statusCode].message })
+        res.status(500).send({ message: errors[res.statusCode].message })
       }
     });
 }
