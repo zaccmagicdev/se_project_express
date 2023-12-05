@@ -15,7 +15,7 @@ module.exports.addItem = (req, res) => {
       if (err.name === 'ValidationError') {
         res.status(400).send({ message: errors[res.statusCode].message })
       } else {
-        res.status.status(500).send({ message: errors[res.statusCode].message })
+        res.status(500).send({ message: errors[res.statusCode].message })
       }
     });
 };

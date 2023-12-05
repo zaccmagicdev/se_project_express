@@ -1,6 +1,6 @@
 const User = require('../models/user');
 const validator = require('validator');
-const { errors } = require('../utils/errors');
+const { errors,handle } = require('../utils/errors');
 
 
 //getting all users in the database
