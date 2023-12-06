@@ -1,60 +1,61 @@
-const ClothingItem = require('../models/clothingItem');
 const validator = require('validator');
-const { errors } = require('../utils/errors');
+const ClothingItem = require('../models/clothingItem');
+const { errorMessages } = require('../utils/errorMessages');
+const { OK, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require('../utils/errors');
 
-//adding a clothing item to the database
+// adding a clothing item to the database
 module.exports.addItem = (req, res) => {
 
   const { name, imageUrl, weather } = req.body;
 
   ClothingItem.create({ name, imageUrl, weather, owner: req.user._id })
     .then((item) => {
-      res.send({ data: item });
+      res.status(CREATED).send({ data: item });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: errors[res.statusCode].message })
+        res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
       } else {
-        res.status(500).send({ message: errors[res.statusCode].message })
+        res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
       }
     });
 };
 
 
 
-//getting all items in the database
+// getting all items in the database
 module.exports.getItems = (req, res) => {
   ClothingItem.find({})
-    .then(items => res.send({ data: items }))
-    .catch(() => res.status(500).send({ message: errors[res.statusCode].message }));
+    .then(items => res.status(OK).send({ data: items }))
+    .catch(() => res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message }));
 };
 
 
-//removing an item from the database
+// removing an item from the database
 module.exports.removeItembyId = (req, res) => {
 
   if (!validator.isMongoId(req.params.id)) {
-    res.status(400).send({ message: errors[res.statusCode].message })
+    res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
   } else {
     ClothingItem.findByIdAndRemove(req.params.id)
       .orFail()
-      .then(item => res.send({ data: item }))
+      .then(item => res.status(OK).send({ data: item }))
       .catch((err) => {
         if (err.name === 'DocumentNotFoundError') {
-          res.status(404).send({ message: errors[res.statusCode].message })
+          res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
         } else {
-          res.status(500).send({ message: errors[res.statusCode].message })
+          res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
         }
       });
   }
 };
 
 
-//liking an item in the database
+// liking an item in the database
 module.exports.likeItem = (req, res) => {
 
   if (!validator.isMongoId(req.params.id)) {
-    res.status(400).send({ message: errors[res.statusCode].message })
+    res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
   } else {
     ClothingItem.findByIdAndUpdate(
       req.params.id,
@@ -62,22 +63,22 @@ module.exports.likeItem = (req, res) => {
       { new: true },
     )
       .orFail()
-      .then(item => res.send({ data: item }))
+      .then(item => res.status(CREATED).send({ data: item }))
       .catch((err) => {
         if (err.name === 'DocumentNotFoundError') {
-          res.status(404).send({ message: errors[res.statusCode].message })
+          res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
         } else {
-          res.status(500).send({ message: errors[res.statusCode].message })
+          res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
         }
       });
   }
 };
 
 
-//unliking an item in the database
+// unliking an item in the database
 module.exports.unlikeItem = (req, res) => {
   if (!validator.isMongoId(req.params.id)) {
-    res.status(400).send({ message: errors[res.statusCode].message })
+    res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
   } else {
     ClothingItem.findByIdAndUpdate(
       req.params.id,
@@ -88,9 +89,9 @@ module.exports.unlikeItem = (req, res) => {
       .then(item => res.send({ data: item }))
       .catch((err) => {
         if (err.name === 'DocumentNotFoundError') {
-          res.status(404).send({ message: errors[res.statusCode].message })
+          res.status(404).send({ message: errorMessages[res.statusCode].message })
         } else {
-          res.status(500).send({ message: errors[res.statusCode].message })
+          res.status(500).send({ message: errorMessages[res.statusCode].message })
         }
       });
   }
