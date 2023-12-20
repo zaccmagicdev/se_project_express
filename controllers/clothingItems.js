@@ -1,7 +1,7 @@
 const validator = require('validator');
 const ClothingItem = require('../models/clothingItem');
 const { errorMessages } = require('../utils/errorMessages');
-const { OK, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require('../utils/errors');
+const { OK, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR, FORBIDDEN } = require('../utils/errors');
 
 // adding a clothing item to the database
 module.exports.addItem = (req, res) => {
@@ -37,11 +37,27 @@ module.exports.removeItembyId = (req, res) => {
   if (!validator.isMongoId(req.params.id)) {
     res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
   } else {
-    ClothingItem.findByIdAndRemove(req.params.id)
+    ClothingItem.findById(req.params.id)
       .orFail()
-      .then(item => res.status(OK).send({ data: item }))
-      .catch((err) => {
-        if (err.name === 'DocumentNotFoundError') {
+      .then((item) => {
+        if (req.user._id === item.owner.toHexString()) {
+          ClothingItem.findByIdAndRemove(req.params.id)
+            .orFail()
+            .then((item) => {
+              res.status(OK).send({ data: item })
+            })
+            .catch((err) => {
+              if (err.name === 'DocumentNotFoundError') {
+                res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
+              } else {
+                res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+              }
+            });
+        } else {
+          res.status(FORBIDDEN).send({ message: errorMessages[res.statusCode].message })
+        }
+      }).catch((err) => {
+        if(err.name === 'DocumentNotFoundError'){
           res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
         } else {
           res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
