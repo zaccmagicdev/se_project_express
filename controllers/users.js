@@ -1,9 +1,8 @@
-const validator = require('validator');
-const User = require('../models/user');
-const { errorMessages } = require('../utils/errorMessages');
-const { OK, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR, DUPLICATION_ERROR } = require('../utils/errors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const User = require('../models/user');
+const { errorMessages } = require('../utils/errorMessages');
+const { OK, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR, DUPLICATION_ERROR, AUTHORIZATION_ERROR } = require('../utils/errors');
 const { JWT_SECRET } = require('../utils/config');
 
 
@@ -42,7 +41,10 @@ module.exports.createUser = (req, res) => {
           res.status(CREATED).send({ name: user.name, avatar: user.avatar, email: user.email, id: user._id })
         })
         .catch((err) => {
-          if (err.name === 'ValidationError') {
+          if(err.name === 'Incorrect email or password'){
+            res.status(AUTHORIZATION_ERROR).send({ message: errorMessages[res.statusCode].message })
+          }
+            else if (err.name === 'ValidationError') {
             res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
           } else if (err.name === 'MongoServerError') {
             res.status(DUPLICATION_ERROR).send({ message: errorMessages[res.statusCode].message })
@@ -50,10 +52,10 @@ module.exports.createUser = (req, res) => {
             res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
           }
         });
-    })
+    }).catch(err => console.log(err))
 }
 
-//logging in
+// logging in
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
 
@@ -70,7 +72,7 @@ module.exports.login = (req, res) => {
 
 module.exports.updateinfo = (req, res) => {
 
-  User.findByIdAndUpdate(req.user._id, { name: req.body.name, avatar: req.body.avatar })
+  User.findByIdAndUpdate(req.user._id, { name: req.body.name, avatar: req.body.avatar }, { new: true, runValidators: true })
   .orFail()
   .then(user => res.status(OK).send({name: req.body.name, avatar: req.body.avatar, email: user.email, id: user._id}))
   .catch(err => {

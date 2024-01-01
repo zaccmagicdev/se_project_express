@@ -43,7 +43,7 @@ module.exports.removeItembyId = (req, res) => {
         if (req.user._id === item.owner.toHexString()) {
           ClothingItem.findByIdAndRemove(req.params.id)
             .orFail()
-            .then((item) => {
+            .then(() => {
               res.status(OK).send({ data: item })
             })
             .catch((err) => {
@@ -105,9 +105,9 @@ module.exports.unlikeItem = (req, res) => {
       .then(item => res.send({ data: item }))
       .catch((err) => {
         if (err.name === 'DocumentNotFoundError') {
-          res.status(404).send({ message: errorMessages[res.statusCode].message })
+          res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
         } else {
-          res.status(500).send({ message: errorMessages[res.statusCode].message })
+          res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
         }
       });
   }

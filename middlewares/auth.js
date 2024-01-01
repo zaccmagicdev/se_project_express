@@ -9,7 +9,11 @@ const handleAuthError = (res) => {
     .send({ message: errorMessages[res.statusCode].message });
 };
 
-const extractBearerToken = (header) => {
+/* const extractBearerToken = (header) => {
+  return header.replace('Bearer ', '');
+}; */
+
+function extractBearerToken(header){
   return header.replace('Bearer ', '');
 };
 
@@ -32,4 +36,6 @@ module.exports = (req, res, next) => {
   req.user = payload;
 
   next();
+
+  return false;
 };
