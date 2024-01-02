@@ -63,7 +63,7 @@ module.exports.login = (req, res) => {
       res.send({ token });
     })
     .catch((err) => {
-      if (err.name === 'Incorrect email or password') {
+      if (err.message === 'Incorrect email or password') {
         res.status(AUTHORIZATION_ERROR).send({ message: errorMessages[res.statusCode].message })
       } else {
         res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
