@@ -41,10 +41,7 @@ module.exports.createUser = (req, res) => {
           res.status(CREATED).send({ name: user.name, avatar: user.avatar, email: user.email, id: user._id })
         })
         .catch((err) => {
-          if(err.name === 'Incorrect email or password'){
-            res.status(AUTHORIZATION_ERROR).send({ message: errorMessages[res.statusCode].message })
-          }
-            else if (err.name === 'ValidationError') {
+          if (err.name === 'ValidationError') {
             res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
           } else if (err.name === 'MongoServerError') {
             res.status(DUPLICATION_ERROR).send({ message: errorMessages[res.statusCode].message })
@@ -52,7 +49,7 @@ module.exports.createUser = (req, res) => {
             res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
           }
         });
-    }).catch(err => console.log(err))
+    }).catch(() => res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message }))
 }
 
 // logging in
@@ -65,24 +62,27 @@ module.exports.login = (req, res) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
       res.send({ token });
     })
-    .catch(() => {
-      res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message });
+    .catch((err) => {
+      if (err.name === 'Incorrect email or password') {
+        res.status(AUTHORIZATION_ERROR).send({ message: errorMessages[res.statusCode].message })
+      } else {
+        res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+      }
     });
 }
 
 module.exports.updateinfo = (req, res) => {
 
   User.findByIdAndUpdate(req.user._id, { name: req.body.name, avatar: req.body.avatar }, { new: true, runValidators: true })
-  .orFail()
-  .then(user => res.status(OK).send({name: req.body.name, avatar: req.body.avatar, email: user.email, id: user._id}))
-  .catch(err => {
-    console.log(err.name)
-    if(err.name === 'ValidationError'){
-      res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
-    } else if(err.name === 'DocumentNotFoundError'){
-      res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
-    } else {
-      res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
-    }
-  })
+    .orFail()
+    .then(user => res.status(OK).send({ name: req.body.name, avatar: req.body.avatar, email: user.email, id: user._id }))
+    .catch(err => {
+      if (err.name === 'ValidationError') {
+        res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
+      } else if (err.name === 'DocumentNotFoundError') {
+        res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
+      } else {
+        res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+      }
+    })
 };
