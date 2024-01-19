@@ -9,10 +9,6 @@ const handleAuthError = (res) => {
     .send({ message: errorMessages[res.statusCode].message });
 };
 
-/* const extractBearerToken = (header) => {
-  return header.replace('Bearer ', '');
-}; */
-
 function extractBearerToken(header){
   return header.replace('Bearer ', '');
 };

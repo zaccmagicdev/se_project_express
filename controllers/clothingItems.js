@@ -13,6 +13,7 @@ module.exports.addItem = (req, res) => {
       res.status(CREATED).send({ data: item });
     })
     .catch((err) => {
+      console.log(err)
       if (err.name === 'ValidationError') {
         res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
       } else {

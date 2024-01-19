@@ -34,6 +34,8 @@ module.exports.getCurrentUser = (req, res) => {
 module.exports.createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
 
+  console.log(req.body)
+
   bcrypt.hash(password, 10)
     .then((hash) => {
       User.create({ name, avatar, email, password: hash })
@@ -41,6 +43,7 @@ module.exports.createUser = (req, res) => {
           res.status(CREATED).send({ name: user.name, avatar: user.avatar, email: user.email, id: user._id })
         })
         .catch((err) => {
+          console.log(err)
           if (err.name === 'ValidationError') {
             res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
           } else if (err.name === 'MongoServerError') {
@@ -58,7 +61,7 @@ module.exports.login = (req, res) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-
+      console.log(user)
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
       res.send({ token });
     })
