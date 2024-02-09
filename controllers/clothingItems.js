@@ -1,23 +1,23 @@
 const validator = require('validator');
 const ClothingItem = require('../models/clothingItem');
-const { errorMessages } = require('../utils/errorMessages');
-const { OK, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR, FORBIDDEN } = require('../utils/errors');
+const BadRequestError = require('../errors/badRequestError');
+const NotFoundError = require('../errors/NotFoundError');
+const ForbiddenError = require('../errors/ForbiddenError');
 
 // adding a clothing item to the database
-module.exports.addItem = (req, res) => {
+module.exports.addItem = (req, res, next) => {
 
   const { name, imageUrl, weather } = req.body;
 
   ClothingItem.create({ name, imageUrl, weather, owner: req.user._id })
     .then((item) => {
-      res.status(CREATED).send({ data: item });
+      res.send({ data: item });
     })
     .catch((err) => {
-      console.log(err)
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
+        next(new BadRequestError('The request you are trying to make is invalid'))
       } else {
-        res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+        next(err)
       }
     });
 };
@@ -25,18 +25,18 @@ module.exports.addItem = (req, res) => {
 
 
 // getting all items in the database
-module.exports.getItems = (req, res) => {
+module.exports.getItems = (req, res, next) => {
   ClothingItem.find({})
-    .then(items => res.status(OK).send({ data: items }))
-    .catch(() => res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message }));
+    .then(items => res.send({ data: items }))
+    .catch((err) => next(err));
 };
 
 
 // removing an item from the database
-module.exports.removeItembyId = (req, res) => {
+module.exports.removeItembyId = (req, res, next) => {
 
   if (!validator.isMongoId(req.params.id)) {
-    res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
+    throw new BadRequestError('No items with that ID were found. Please enter a valid one')
   } else {
     ClothingItem.findById(req.params.id)
       .orFail()
@@ -45,23 +45,23 @@ module.exports.removeItembyId = (req, res) => {
           ClothingItem.findByIdAndRemove(req.params.id)
             .orFail()
             .then(() => {
-              res.status(OK).send({ data: item })
+              res.send({ data: item })
             })
             .catch((err) => {
               if (err.name === 'DocumentNotFoundError') {
-                res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
+                next(new NotFoundError('No such item exists. Please make sure the user you want to delete exists'))
               } else {
-                res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+                next(err)
               }
             });
         } else {
-          res.status(FORBIDDEN).send({ message: errorMessages[res.statusCode].message })
+          next(new ForbiddenError('You do not have the authorization to make that request'))
         }
       }).catch((err) => {
-        if(err.name === 'DocumentNotFoundError'){
-          res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
+        if (err.name === 'DocumentNotFoundError') {
+          next(new NotFoundError('No such item exists. Please make sure the user you want to delete exists'))
         } else {
-          res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+          next(err)
         }
       });
   }
@@ -69,10 +69,10 @@ module.exports.removeItembyId = (req, res) => {
 
 
 // liking an item in the database
-module.exports.likeItem = (req, res) => {
+module.exports.likeItem = (req, res, next) => {
 
   if (!validator.isMongoId(req.params.id)) {
-    res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
+    throw new BadRequestError('No items with that ID were found. Please enter a valid one')
   } else {
     ClothingItem.findByIdAndUpdate(
       req.params.id,
@@ -80,12 +80,12 @@ module.exports.likeItem = (req, res) => {
       { new: true },
     )
       .orFail()
-      .then(item => res.status(CREATED).send({ data: item }))
+      .then(item => res.send({ data: item }))
       .catch((err) => {
         if (err.name === 'DocumentNotFoundError') {
-          res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
+          next(new NotFoundError('No such item exists. Please make sure the user you want to delete exists'))
         } else {
-          res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+          next(err)
         }
       });
   }
@@ -93,9 +93,9 @@ module.exports.likeItem = (req, res) => {
 
 
 // unliking an item in the database
-module.exports.unlikeItem = (req, res) => {
+module.exports.unlikeItem = (req, res, next) => {
   if (!validator.isMongoId(req.params.id)) {
-    res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
+    throw new BadRequestError('No items with that ID were found. Please enter a valid one')
   } else {
     ClothingItem.findByIdAndUpdate(
       req.params.id,
@@ -106,9 +106,9 @@ module.exports.unlikeItem = (req, res) => {
       .then(item => res.send({ data: item }))
       .catch((err) => {
         if (err.name === 'DocumentNotFoundError') {
-          res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
+          next(new NotFoundError('No such item exists. Please make sure the user you want to delete exists'))
         } else {
-          res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+         next(err)
         }
       });
   }

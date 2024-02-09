@@ -1,37 +1,39 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { errorMessages } = require('../utils/errorMessages');
-const { OK, CREATED, BAD_REQUEST, NOT_FOUND, SERVER_ERROR, DUPLICATION_ERROR, AUTHORIZATION_ERROR } = require('../utils/errors');
 const { JWT_SECRET } = require('../utils/config');
+const BadRequestError = require('../errors/badRequestError');
+const ConflictError = require('../errors/ConflictError');
+const NotFoundError = require('../errors/NotFoundError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
 
 // getting all users in the database
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
-    .then(users => res.status(OK).send({ data: users }))
-    .catch(() => res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message }));
+    .then(users => res.send({ data: users }))
+    .catch((err) => next(err));
 };
 
 
 // getting a user by id
-module.exports.getCurrentUser = (req, res) => {
+module.exports.getCurrentUser = (req, res, next) => {
 
   User.findById(req.user._id)
     .orFail()
-    .then(user => res.status(OK).send({ data: user }))
+    .then(user => res.send({ data: user }))
     .catch((err) => {
       if (err.name === 'DocumentNotFoundError') {
-        res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
+        next(new NotFoundError('The user you requested to find does not exist in the database. Please enter one that does.'))
       } else {
-        res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+        next(err)
       }
     });
 };
 
 
 // creating a user to the database
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
 
   console.log(req.body)
@@ -40,23 +42,24 @@ module.exports.createUser = (req, res) => {
     .then((hash) => {
       User.create({ name, avatar, email, password: hash })
         .then((user) => {
-          res.status(CREATED).send({ name: user.name, avatar: user.avatar, email: user.email, id: user._id })
+          res.send({ name: user.name, avatar: user.avatar, email: user.email, id: user._id })
         })
         .catch((err) => {
           console.log(err)
           if (err.name === 'ValidationError') {
-            res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
+            next(new BadRequestError('The request you are trying to make is invalid'))
           } else if (err.name === 'MongoServerError') {
-            res.status(DUPLICATION_ERROR).send({ message: errorMessages[res.statusCode].message })
+            next(new ConflictError('A parameter in the request already matches one with the database. Please check the log for details'))
           } else {
-            res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+            next(err)
           }
         });
-    }).catch(() => res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message }))
+    })
+    .catch((err) => next(err))
 }
 
 // logging in
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
@@ -67,25 +70,25 @@ module.exports.login = (req, res) => {
     })
     .catch((err) => {
       if (err.message === 'Incorrect email or password') {
-        res.status(AUTHORIZATION_ERROR).send({ message: errorMessages[res.statusCode].message })
+        next(new UnauthorizedError('The email or password that was entered was incorrect.'))
       } else {
-        res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+        next(err)
       }
     });
 }
 
-module.exports.updateinfo = (req, res) => {
+module.exports.updateinfo = (req, res, next) => {
 
   User.findByIdAndUpdate(req.user._id, { name: req.body.name, avatar: req.body.avatar }, { new: true, runValidators: true })
     .orFail()
-    .then(user => res.status(OK).send({ name: req.body.name, avatar: req.body.avatar, email: user.email, id: user._id }))
+    .then(user => res.send({ name: req.body.name, avatar: req.body.avatar, email: user.email, _id: user._id }))
     .catch(err => {
       if (err.name === 'ValidationError') {
-        res.status(BAD_REQUEST).send({ message: errorMessages[res.statusCode].message })
+        next(new BadRequestError('The request you are trying to make is invalid'))
       } else if (err.name === 'DocumentNotFoundError') {
-        res.status(NOT_FOUND).send({ message: errorMessages[res.statusCode].message })
+        next(new NotFoundError('The user you requested to find does not exist in the database. Please enter one that does.'))
       } else {
-        res.status(SERVER_ERROR).send({ message: errorMessages[res.statusCode].message })
+        next(err)
       }
     })
 };

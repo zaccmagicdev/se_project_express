@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const cors = require("cors");
+const errorHandler = require('./middlewares/errorHandler');
 
 const { NOT_FOUND } = require('./utils/errors');
 
@@ -31,6 +32,8 @@ app.post('/signin', login);
 app.use('*', (req, res) => {
   res.status(NOT_FOUND).send({message: errorMessages[res.statusCode].message})
 })
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`This server is running on port ${PORT}`)
