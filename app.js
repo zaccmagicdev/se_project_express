@@ -47,6 +47,12 @@ app.use('*', (req, res) => {
   throw new NotFoundError('The resource you are looking for does not exist. Please enter a valid link')
 })
 
+app.get('/crash-test', () => {
+  setTimeout(() => {
+    throw new Error('Server will crash now');
+  }, 0);
+});
+
 app.use(errorHandler);
 app.use(errors());
 app.use(errorLogger);
