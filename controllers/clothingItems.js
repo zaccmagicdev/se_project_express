@@ -1,8 +1,8 @@
 const validator = require('validator');
 const ClothingItem = require('../models/clothingItem');
-const BadRequestError = require('../errors/badRequestError');
 const NotFoundError = require('../errors/NotFoundError');
 const ForbiddenError = require('../errors/ForbiddenError');
+const BadRequestError = require('../errors/BadRequestError');
 
 // adding a clothing item to the database
 module.exports.addItem = (req, res, next) => {

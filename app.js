@@ -6,7 +6,7 @@ const cors = require("cors");
 const errorHandler = require('./middlewares/errorHandler');
 const { Joi, celebrate, errors } = require('celebrate');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
-
+const { validateUserBody, validateLogin } = require('./middlewares/validation')
 const { createUser, login } = require('./controllers/users');
 const NotFoundError = require('./errors/NotFoundError');
 
@@ -27,21 +27,10 @@ app.use('/users', require('./routes/users'));
 
 app.use('/items', require('./routes/clothingItems'))
 
-app.post('/signup', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    avatar: Joi.string(),
-    email: Joi.string().unique().required(),
-    password: Joi.string().required()
-  }), createUser
-}));
+app.post('/signup', validateUserBody, createUser);
 
-app.post('/signin', celebrate({
-  body: Joi.object().keys({
-    email: Joi.string().required(),
-    password: Joi.string().required()
-  }), login
-}));
+app.post('/signin', validateLogin, login);
+
 
 app.use('*', (req, res) => {
   throw new NotFoundError('The resource you are looking for does not exist. Please enter a valid link')
