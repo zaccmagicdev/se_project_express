@@ -79,6 +79,8 @@ module.exports.login = (req, res, next) => {
 
 module.exports.updateinfo = (req, res, next) => {
 
+  console.log(req);
+
   User.findByIdAndUpdate(req.user._id, { name: req.body.name, avatar: req.body.avatar }, { new: true, runValidators: true })
     .orFail()
     .then(user => res.send({ name: req.body.name, avatar: req.body.avatar, email: user.email, _id: user._id }))

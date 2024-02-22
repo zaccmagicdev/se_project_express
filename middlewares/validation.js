@@ -37,7 +37,7 @@ module.exports.validateUserBody = celebrate({
       "string.empty": 'The "name" field must be filled in',
     }),
 
-    avatar: Joi.string().custom(validateURL).messages({
+    avatar: Joi.string().allow('').allow(null).custom(validateURL).messages({
       "string.uri": 'the "imageUrl" field must be a valid url',
     }),
 
@@ -48,7 +48,7 @@ module.exports.validateUserBody = celebrate({
     password: Joi.string().required().messages({
       "string.empty":'You must fill in a password'
     })
-  })
+  }).unknown(true),
 });
 
 module.exports.validateLogin = celebrate({
@@ -81,7 +81,7 @@ module.exports.validateUserUpdateEvent = celebrate({
       "string.empty": 'The "name" field must be filled in',
     }),
 
-    avatar: Joi.string().custom(validateURL).messages({
+    avatar: Joi.string().allow('').allow(null).custom(validateURL).messages({
       "string.uri": 'the "imageUrl" field must be a valid url',
     }),
   })
