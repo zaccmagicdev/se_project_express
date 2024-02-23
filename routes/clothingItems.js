@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const { Joi, celebrate } = require('celebrate');
 const { validateId, validateCardBody } = require('../middlewares/validation')
 const { addItem, getItems, removeItembyId, likeItem, unlikeItem } = require('../controllers/clothingItems');
 const auth = require('../middlewares/auth');

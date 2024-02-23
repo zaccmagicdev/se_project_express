@@ -1,10 +1,12 @@
+require('dotenv').config();
+
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const helmet = require('helmet');
 const cors = require("cors");
-const errorHandler = require('./middlewares/errorHandler');
-const { Joi, celebrate, errors } = require('celebrate');
+const { errors } = require('celebrate');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const { validateUserBody, validateLogin } = require('./middlewares/validation')
 const { createUser, login } = require('./controllers/users');
@@ -14,6 +16,12 @@ const { PORT = 3001 } = process.env;
 
 const app = express();
 
+app.get('/crash-test', () => {
+  setTimeout(() => {
+    throw new Error('Server will crash now');
+  }, 0);
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
@@ -21,6 +29,7 @@ app.use(cors());
 mongoose.connect('mongodb://127.0.0.1:27017/wtwr_db');
 
 app.use(requestLogger);
+
 app.use(helmet());
 
 app.use('/users', require('./routes/users'));
@@ -32,22 +41,13 @@ app.post('/signup', validateUserBody, createUser);
 app.post('/signin', validateLogin, login);
 
 
-app.use('*', (req, res) => {
+app.use('*', () => {
   throw new NotFoundError('The resource you are looking for does not exist. Please enter a valid link')
 })
 
-app.get('/crash-test', () => {
-  setTimeout(() => {
-    throw new Error('Server will crash now');
-  }, 0);
-});
-
-app.use(errorHandler);
 app.use(errors());
-app.use(errorLogger);
 
 app.use((err, req, res, next) => {
-  console.error(err);
 
   const { statusCode = 500, message } = err;
   res
@@ -58,6 +58,8 @@ app.use((err, req, res, next) => {
         : message
     });
 });
+
+app.use(errorLogger);
 
 app.listen(PORT, () => {
   console.log(`This server is running on port ${PORT}`)

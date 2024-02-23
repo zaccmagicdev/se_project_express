@@ -48,7 +48,7 @@ module.exports.validateUserBody = celebrate({
     password: Joi.string().required().messages({
       "string.empty":'You must fill in a password'
     })
-  }).unknown(true),
+  })
 });
 
 module.exports.validateLogin = celebrate({

@@ -1,12 +1,9 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../utils/config');
-const { AUTHORIZATION_ERROR } = require('../utils/errors');
-const { errorMessages } = require('../utils/errorMessages');
+const UnauthorizedError = require('../errors/UnauthorizedError');
 
-const handleAuthError = (res) => {
-  res
-    .status(AUTHORIZATION_ERROR)
-    .send({ message: errorMessages[res.statusCode].message });
+const handleAuthError = () => {
+  throw new UnauthorizedError('You are not authorized to access the requested resource');
 };
 
 function extractBearerToken(header){

@@ -12,6 +12,11 @@ const userSchema = new mongoose.Schema({
   },
   avatar: {
     type: String,
+    required: true,
+    validate: {
+      validator: (v) => validator.isURL(v),
+      message: 'Please enter a valid image URL',
+    },
   },
   email: {
     type: String,
