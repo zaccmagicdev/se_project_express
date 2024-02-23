@@ -45,6 +45,8 @@ app.use('*', () => {
   throw new NotFoundError('The resource you are looking for does not exist. Please enter a valid link')
 })
 
+app.use(errorLogger);
+
 app.use(errors());
 
 app.use((err, req, res, next) => {
@@ -58,8 +60,6 @@ app.use((err, req, res, next) => {
         : message
     });
 });
-
-app.use(errorLogger);
 
 app.listen(PORT, () => {
   console.log(`This server is running on port ${PORT}`)
