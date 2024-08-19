@@ -34,6 +34,9 @@ module.exports.createUser = (req, res, next) => {
           res.send({ name: user.name, avatar: user.avatar, email: user.email, id: user._id })
         })
         .catch((err) => {
+
+          console.log(err)
+
           if (err.name === 'ValidationError') {
             next(new BadRequestError('The request you are trying to make is invalid'))
           } else if (err.name === 'MongoServerError') {
